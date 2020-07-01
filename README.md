@@ -14,7 +14,9 @@ Combine images according to coordinates, convert images to PDF and find the coor
 
 ### 1-Jul-2020
 - Crop Image: Add crop image commands to crop images from coordinates
+
 ![alt text](https://raw.githubusercontent.com/rocketbot-cl/ImageWork/master/example/imgwork.jpg)
+
 
 <h2>Dependencies</h2>
 
