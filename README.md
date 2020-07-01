@@ -1,6 +1,19 @@
 # ImageWork
 Combine images according to coordinates, convert images to PDF and find the coordinates of one image within another, also extract text from an image or pdf
 
+## Commands
+<ul>
+    <li>Merge Images</li>
+    <li>Convert to PDF</li>
+    <li>Search Image</li>
+    <li>Extract Text</li>
+    <li>Crop Image</li>
+</ul>
+
+## Updates
+
+### 1-Jul-2020
+- Crop Image: Add crop image commands to crop images from coordinates
 ![alt text](https://raw.githubusercontent.com/rocketbot-cl/ImageWork/master/example/imgwork.jpg)
 
 <h2>Dependencies</h2>
