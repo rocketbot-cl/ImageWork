@@ -213,6 +213,7 @@ if module == "readText":
         PrintException()
         raise e
 
+
 if module == "cropImage":
     image_path = GetParams("image")
     path = GetParams("path")
