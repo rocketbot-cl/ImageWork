@@ -116,7 +116,7 @@ if module == "toPDF":
         print(files)
         images = []
         for file in files:
-            if file.endswith(".jpg") or file.endswith(".jpeg"):
+            if file.endswith(".jpg") or file.endswith(".jpeg") or file.endswith(".png"):
                 path = img + os.sep + file
                 print(path)
                 jpg = Image.open(path)
