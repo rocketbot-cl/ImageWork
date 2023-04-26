@@ -160,6 +160,44 @@ if module == "search":
 
     if result:
         SetVar(result, "{},{}".format(MPx, MPy))
+        
+if module == "searchImage":
+    try:
+        img_base_path = GetParams("img_base").replace("/", os.sep)
+        img_searched_path = GetParams("img_searched").replace("/", os.sep)
+        min_val_var = float(GetParams("min_val")) if GetParams("min_val") else 0.9
+        result = GetParams("result")
+        
+        imagen1 = cv2.imread(img_base_path)
+        imagen2 = cv2.imread(img_searched_path)
+        
+        imagen1_gris = cv2.cvtColor(imagen1, cv2.COLOR_BGR2GRAY)
+        imagen2_gris = cv2.cvtColor(imagen2, cv2.COLOR_BGR2GRAY)
+        
+        
+        resultado = cv2.matchTemplate(imagen1_gris, imagen2_gris, cv2.TM_CCOEFF_NORMED)
+        _, max_val, _, max_loc = cv2.minMaxLoc(resultado)
+        
+        print("Valor de coincidencia encontrado: ", max_val)
+        if max_val < min_val_var:
+            print("max_val", max_val)
+            SetVar(result, False)
+            raise Exception("Image not found")
+        else:
+            SetVar(result, True)
+
+        
+        
+        
+        
+        
+    except Exception as e:
+        PrintException()
+        raise e
+    
+    
+    
+    
 
 if module == "readText":
 
