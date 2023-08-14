@@ -76,6 +76,32 @@ def pdf2Img(pdf, conf, img=None, dim = None):
     a = con.communicate()
     return a
 
+def combine_vertical(img1, img2):
+    image1 = Image.open(img1)
+    image2 = Image.open(img2)
+    
+    total_height = max(image1.width, image2.width)
+    total_width = image1.height + image2.height
+    
+    combined_image = Image.new('RGB', (total_height, total_width))
+    combined_image.paste(image1, (0, 0))
+    combined_image.paste(image2, (0, image1.height))
+    
+    return combined_image
+
+def combine_horizontal(img1, img2):
+    image1 = Image.open(img1)
+    image2 = Image.open(img2)
+    
+    total_height = max(image1.height, image2.height)
+    total_width = image1.width + image2.width
+    
+    combined_image = Image.new('RGB', (total_width, total_height))
+    combined_image.paste(image1, (0, 0))
+    combined_image.paste(image2, (image1.width, 0))
+    
+    return combined_image
+
 
 module = GetParams("module")
 
@@ -102,6 +128,7 @@ if module == "merge":
             SetVar(result, True)
 
     except Exception as e:
+        SetVar(result, False)
         PrintException()
         raise Exception(e)
 
@@ -130,6 +157,7 @@ if module == "toPDF":
         if result:
             SetVar(result, True)
     except Exception as e:
+        SetVar(result, False)
         PrintException()
         raise e
 if module == "search":
@@ -194,9 +222,6 @@ if module == "searchImage":
     except Exception as e:
         PrintException()
         raise e
-    
-    
-    
     
 
 if module == "readText":
@@ -263,6 +288,23 @@ if module == "cropImage":
         size = eval(size)
         pdf_im = Image.open(image_path)
         pdf_im.crop(coord + size).save(path)
+    except Exception as e:
+        print("\x1B[" + "31;40mError\u2193\x1B[" + "0m")
+        PrintException()
+        raise e
+
+if module == "combineImages":
+    image1 = GetParams("image1")
+    image2 = GetParams("image2")
+    orientation = GetParams("orientation")
+    path = GetParams("combined_image")
+
+    try:
+        if orientation == "vertical":
+            combine_vertical(image1, image2).save(path)
+        elif orientation == "horizontal":
+            combine_horizontal(image1, image2).save(path)
+
     except Exception as e:
         print("\x1B[" + "31;40mError\u2193\x1B[" + "0m")
         PrintException()
