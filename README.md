@@ -1,51 +1,48 @@
 # ImageWork
-Combine images according to coordinates, convert images to PDF and find the coordinates of one image within another, also extract text from an image or pdf
+  
+Module for image management. Allows you to merge, search image in image, combine, crop images and more.  
 
-## Commands
-<ul>
-    <li>Merge Images</li>
-    <li>Convert to PDF</li>
-    <li>Search Image</li>
-    <li>Extract Text</li>
-    <li>Crop Image</li>
-</ul>
+*Read this in other languages: [English](README.md), [Português](README.pr.md), [Español](README.es.md)*
 
-## Updates
-
-### 1-Jul-2020
-- Crop Image: Add crop image commands to crop images from coordinates
-
-![alt text](https://raw.githubusercontent.com/rocketbot-cl/ImageWork/master/example/imgwork.jpg)
+## How to install this module
+  
+To install the module in Rocketbot Studio, it can be done in two ways:
+1. Manual: __Download__ the .zip file and unzip it in the modules folder. The folder name must be the same as the module and inside it must have the following files and folders: \__init__.py, package.json, docs, example and libs. If you have the application open, refresh your browser to be able to use the new module.
+2. Automatic: When entering Rocketbot Studio on the right margin you will find the **Addons** section, select **Install Mods**, search for the desired module and press install.  
 
 
-<h2>Dependencies</h2>
+## Overview
 
-<ul>
-  <li>
-    <strong>
-      <a href="https://github.com/tesseract-ocr/tesseract">Tesseract OCR</a>
-    </strong> 
-  </li>  
-</ul>  
-<ul>
-  <li>
-    <strong>
-      <a href="https://pypi.org/project/imutils/">imutils</a>
-    </strong> 
-  </li>  
-</ul>  
-<ul>
-  <li>
-    <strong>
-      <a href="https://pypi.org/project/PIL/">PIL</a>
-    </strong> 
-  </li>  
-</ul>  
 
-<h2>License</h2>
+1. Merge images  
+This command allows you to merge two images into one, the second image is superimposed on the first at the indicated coordinates. The path of the resulting file will be the same as the first image
 
-<p><a href="http://badges.mit-license.org" rel="nofollow"><img src="https://camo.githubusercontent.com/107590fac8cbd65071396bb4d04040f76cde5bde/687474703a2f2f696d672e736869656c64732e696f2f3a6c6963656e73652d6d69742d626c75652e7376673f7374796c653d666c61742d737175617265" alt="License" data-canonical-src="http://img.shields.io/:license-mit-blue.svg?style=flat-square" style="max-width:100%;"></a></p>
+2. Convert to PDF  
+Convert JPG files to PDF 
 
-<ul>
-  <li><strong><a href="http://opensource.org/licenses/mit-license.php" rel="nofollow">MIT license</a></strong></li>
-</ul>  
+3. Search image in image  
+This command searches if image 1 contains image 2 inside and returns True or False depending on the result
+
+4. Extract text  
+Extract text from a specific area of an image
+
+5. Crop image  
+Crop an image from coordinates
+
+6. Combine images  
+Combines two images into one while maintaining the size of each image. It can be combined horizontally or vertically  
+
+
+
+
+----
+### OS
+
+- windows
+
+### Dependencies
+- [**Pillow**](https://pypi.org/project/Pillow/)
+### License
+  
+![MIT](https://camo.githubusercontent.com/107590fac8cbd65071396bb4d04040f76cde5bde/687474703a2f2f696d672e736869656c64732e696f2f3a6c6963656e73652d6d69742d626c75652e7376673f7374796c653d666c61742d737175617265)  
+[MIT](http://opensource.org/licenses/mit-license.ph)
