@@ -30,8 +30,10 @@ Extract text from a specific area of an image
 Crop an image from coordinates
 
 6. Combine images  
-Combines two images into one while maintaining the size of each image. It can be combined horizontally or vertically  
+Combines two images into one while maintaining the size of each image. It can be combined horizontally or vertically
 
+7. Compare similarities between images  
+Compares an image with a folder of images and returns the percentage of similarity between them.  
 
 
 

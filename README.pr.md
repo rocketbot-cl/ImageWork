@@ -30,8 +30,10 @@ Extrair texto de uma área específica de uma imagem
 Corta uma imagem a partir de coordenadas
 
 6. Combine imagens  
-Combina duas imagens em uma mantendo o tamanho de cada imagem. Pode ser combinado horizontal ou verticalmente  
+Combina duas imagens em uma mantendo o tamanho de cada imagem. Pode ser combinado horizontal ou verticalmente
 
+7. Comparar semelhanças entre imagens  
+Compara uma imagem com uma pasta de imagens e retorna a porcentagem de semelhança entre elas.  
 
 
 

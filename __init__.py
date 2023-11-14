@@ -102,6 +102,64 @@ def combine_horizontal(img1, img2):
     
     return combined_image
 
+def calculate_similarity(image1, image2, output_folder=None, resize=(500, 500)):
+    from skimage.metrics import structural_similarity
+    import numpy as np
+
+    try:
+        img1 = cv2.imread(image1)
+        img2 = cv2.imread(image2)
+        filename = image2.split(os.sep)[-1].split(".")[0]
+
+        # resize images
+        resize = eval(resize)
+        img1 = cv2.resize(img1, resize)
+        img2 = cv2.resize(img2, resize)
+
+        if img1 is None or img2 is None:
+            raise ValueError("One of the images didn't load correctly")
+
+        gray1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
+        gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+
+        (score, diff) = structural_similarity(gray1, gray2, full=True)
+
+        diff = (diff * 255).astype("uint8")
+
+        thresh = cv2.threshold(diff, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
+        contours = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours = contours[0] if len(contours) == 2 else contours[1]
+
+        mask = np.zeros(img1.shape, dtype="uint8")
+        filled_after = img2.copy()
+
+        for c in contours:
+            area = cv2.contourArea(c)
+            if area > 40:
+                x, y, w, h = cv2.boundingRect(c)
+                cv2.rectangle(img1, (x, y), (x + w, y + h), (36, 255, 12), 2)
+                cv2.rectangle(img2, (x, y), (x + w, y + h), (36, 255, 12), 2)
+                cv2.drawContours(mask, [c], 0, (0, 255, 0), -1)
+                cv2.drawContours(filled_after, [c], 0, (0, 255, 0), -1)
+
+        os.makedirs(output_folder, exist_ok=True)
+        os.makedirs(output_folder + os.sep + filename, exist_ok=True)
+        output_folder = output_folder + os.sep + filename
+
+        cv2.imwrite(output_folder + os.sep + "diff.png", diff)
+        cv2.imwrite(output_folder + os.sep + "mask.png", mask)
+        cv2.imwrite(output_folder + os.sep + "img1.png", img1)
+        cv2.imwrite(output_folder + os.sep + "img2.png", img2)
+        cv2.imwrite(output_folder + os.sep + "filled.png", filled_after)
+
+        ssim = round(score, 2)
+        return ssim
+
+    except Exception as e:
+        print("\x1B[" + "31;40mError\u2193\x1B[" + "0m")
+        PrintException()
+        raise e
+
 
 module = GetParams("module")
 
@@ -140,15 +198,15 @@ if module == "toPDF":
 
     try:
         files = os.listdir(img)
-        print(files)
         images = []
         for file in files:
-            if file.endswith(".jpg") or file.endswith(".jpeg") or file.endswith(".png"):
+            if file.endswith(".jpg") or file.endswith(".jpeg") or file.endswith(".png") or file.endswith(".bmp") or file.endswith(".gif") or file.endswith(".tiff") or file.endswith(".tif") or file.endswith(".jfif"):
                 path = img + os.sep + file
-                print(path)
                 jpg = Image.open(path)
                 images.append(jpg)
-        print(images)
+
+        if not pdf.endswith(".pdf"):
+            pdf += ".pdf"
 
         images[0].save(pdf, save_all=True)
         for image in images[1:]:
@@ -307,5 +365,28 @@ if module == "combineImages":
 
     except Exception as e:
         print("\x1B[" + "31;40mError\u2193\x1B[" + "0m")
+        PrintException()
+        raise e
+
+if module == "compareFolder":
+    image1 = GetParams("image1")
+    folder = GetParams("images_folder")
+    resize = GetParams("resize")
+    output_folder = GetParams("output_folder")
+    result = GetParams("result")
+
+    try:
+        similarities = {}
+        for filename in os.listdir(folder):
+            if not os.path.isfile(folder + os.sep + filename):
+                continue
+            result_similarity = calculate_similarity(image1, folder + os.sep + filename, output_folder, resize)
+            similarity_percentage = result_similarity * 100
+            similarities[filename] = str(round(similarity_percentage, 2)) + "%"
+
+        if result:
+            SetVar(result, similarities)
+    
+    except Exception as e:
         PrintException()
         raise e

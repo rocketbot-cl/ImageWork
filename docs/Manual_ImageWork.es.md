@@ -2,7 +2,7 @@
   
 Módulo para el manejo de imágenes. Permite fusionar, buscar imagen en imagen, combinar, recortar imágenes y más.  
 
-
+*Read this in other languages: [English](Manual_ImageWork.md), [Português](Manual_ImageWork.pr.md), [Español](Manual_ImageWork.es.md)*
   
 ![banner](imgs/Banner_ImageWork.png)
 ## Como instalar este módulo
@@ -73,3 +73,14 @@ Combina dos imágenes en una sola manteniendo el tamaño de cada imagen. Puede c
 |Imagen 2|Imagen 2 a combinar. Será posicionada a la derecha o abajo de la imagen 1 según la orientación seleccionada|C:/Users/User/desktop/imagen2.png|
 |Orientación|Selecciona la orientación de la imagen resultante|Horizontal|
 |Imagen combinada|Ruta de la imagen resultante|C:/Users/User/desktop/imagenCombinada.png|
+
+### Comparar similitudes entre imágenes
+  
+Compara una imagen con una carpeta de imágenes y devuelve el porcentaje de similitud entre ellas.
+|Parámetros|Descripción|ejemplo|
+| --- | --- | --- |
+|Imagen a comparar|Imagen a comparar con las imágenes de la carpeta seleccionada.|C:/Users/User/desktop/imagen1.png|
+|Carpeta de imágenes|Carpeta con las imágenes a comparar con la imagen seleccionada.|C:/Users/User/desktop/carpetaImagenes|
+|Carpeta de resultados|Carpeta donde se almacenarán los resultados de la comparación.|C:/Users/User/desktop/resultados|
+|Tamaño de redimensión en px|Para que el comando funcione correctamente, es necesario establecer un tamaño de redimensión para las imágenes. Por defecto es 500,500|500,500|
+|Resultado|Variable donde se almacenará el nivel de coincidencias con cada imagen|variable|
