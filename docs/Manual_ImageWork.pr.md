@@ -26,10 +26,10 @@ Esse comando permite mesclar duas imagens em uma; a segunda imagem é sobreposta
 
 ### Converter para PDF
   
-Converter arquivos JPG para PDF
+Converter arquivos de imagem de uma pasta para PDF
 |Parâmetros|Descrição|exemplo|
 | --- | --- | --- |
-|Caminho da pasta com arquivos JPG|Pasta com arquivos JPG para converter para PDF|JPG|
+|Pasta com arquivos de imagem para converter em PDF|Caminho da pasta com arquivos de imagem|C:/Users/User/Desktop/pasta_imagens|
 |Nome e caminho do PDF|Caminho e nome do PDF a criar|PDF|
 |Resultado|Variável onde True ou False é armazenado de acordo com o resultado da operação||
 

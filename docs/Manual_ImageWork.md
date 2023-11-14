@@ -26,10 +26,10 @@ This command allows you to merge two images into one, the second image is superi
 
 ### Convert to PDF
   
-Convert JPG files to PDF 
+Convert image files from a folder to PDF 
 |Parameters|Description|example|
 | --- | --- | --- |
-|Folder path with JPG files|Folder with JPG files to convert to PDF|JPG|
+|Path of the folder with image files|Folder with image files to convert to PDF|C:/Users/User/Desktop/images_folder|
 |Name and path of PDF|Path and name of PDF to create|PDF|
 |Result|Variable where True or False is stored according to the result of the operation||
 

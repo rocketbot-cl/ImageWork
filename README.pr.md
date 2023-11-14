@@ -18,7 +18,7 @@ Para instalar o módulo no Rocketbot Studio, pode ser feito de duas formas:
 Esse comando permite mesclar duas imagens em uma; a segunda imagem é sobreposta à primeira nas coordenadas especificadas. O caminho do arquivo resultante será o mesmo da primeira imagem
 
 2. Converter para PDF  
-Converter arquivos JPG para PDF
+Converter arquivos de imagem de uma pasta para PDF
 
 3. Buscar imagem em imagem  
 Este comando procura se a imagem 1 contém a imagem 2 dentro e retorna True ou False dependendo do resultado

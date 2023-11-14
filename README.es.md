@@ -18,7 +18,7 @@ Para instalar el módulo en Rocketbot Studio, se puede hacer de dos formas:
 Este comando permite fusionar dos imágenes en una sola, la segunda imagen se superpone a la primera en las coordenadas indicadas. La ruta del archivo resultante será la misma de la primer imagen
 
 2. Convertir a PDF  
-Convierte archivos JPG a PDF
+Convierte archivos de imágenes de una carpeta a PDF
 
 3. Buscar imagen en imagen  
 Este comando busca si la imagen 1 contiene la imagen 2 dentro y devuelve True o False dependiendo del resultado

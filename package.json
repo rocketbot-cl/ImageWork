@@ -155,19 +155,19 @@
     {
       "es": {
         "title": "Convertir a PDF",
-        "description": "Convierte archivos JPG a PDF",
+        "description": "Convierte archivos de imágenes de una carpeta a PDF",
         "title_options": null,
         "options": null
       },
       "en": {
         "title": "Convert to PDF",
-        "description": "Convert JPG files to PDF ",
+        "description": "Convert image files from a folder to PDF",
         "title_options": null,
         "options": null
       },
       "pr": {
         "title": "Converter para PDF",
-        "description": "Converter arquivos JPG para PDF",
+        "description": "Converter arquivos de imagem de uma pasta para PDF",
         "title_options": null,
         "options": null
       },
@@ -177,19 +177,24 @@
           {
             "type": "folder_select",
             "placeholder": {
-              "es": "JPG",
-              "en": "JPG",
-              "pr": "JPG"
+              "es": "C:/Users/User/Desktop/carpeta_imagenes",
+              "en": "C:/Users/User/Desktop/images_folder",
+              "pr": "C:/Users/User/Desktop/pasta_imagens"
             },
             "title": {
-              "es": "Path de la carpeta con archivos JPG",
-              "en": "Folder path with JPG files",
-              "pr": "Caminho da pasta com arquivos JPG"
+              "es": "Path de la carpeta con archivos de imágenes",
+              "en": "Path of the folder with image files",
+              "pr": "Caminho da pasta com arquivos de imagem"
             },
             "description": {
-              "es": "Carpeta con archivos JPG a convertir a PDF",
-              "en": "Folder with JPG files to convert to PDF",
-              "pr": "Pasta com arquivos JPG para converter para PDF"
+              "es": "Carpeta con archivos de imágenes a convertir a PDF",
+              "en": "Folder with image files to convert to PDF",
+              "pr": "Pasta com arquivos de imagem para converter em PDF"
+            },
+            "help": {
+              "es": "Acepta imágenes con formato jpg, jpeg, png, bnp, gif, tiff, tif, jfif.",
+              "en": "Accepts images with jpg, jpeg, png, bnp, gif, tiff, tif, jfif format.",
+              "pr": "Aceita imagens com formato jpg, jpeg, png, bnp, gif, tiff, tif, jfif."
             },
             "id": "jpg-folder",
             "css": "col-md-12",

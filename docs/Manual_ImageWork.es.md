@@ -26,10 +26,10 @@ Este comando permite fusionar dos imágenes en una sola, la segunda imagen se su
 
 ### Convertir a PDF
   
-Convierte archivos JPG a PDF
+Convierte archivos de imágenes de una carpeta a PDF
 |Parámetros|Descripción|ejemplo|
 | --- | --- | --- |
-|Path de la carpeta con archivos JPG|Carpeta con archivos JPG a convertir a PDF|JPG|
+|Carpeta con archivos de imágenes a convertir a PDF|Path de la carpeta con archivos de imágenes|C:/Users/User/Desktop/carpeta_imagenes|
 |Path y nombre del PDF|Path y nombre del PDF a crear|PDF|
 |Resultado|Variable donde se almacena True o False según el resultado de la operación||
 
