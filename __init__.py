@@ -29,8 +29,17 @@ import time
 """
     Obtengo el modulo que fueron invocados
 """
-
 base_path = tmp_global_obj["basepath"]
+import shutil
+libs_path = base_path + 'modules' + os.sep + 'ImageWork' + os.sep + 'libs' + os.sep + 'scipy'
+rocket_libs_path = base_path + os.sep + 'scipy'
+
+if not os.path.exists(rocket_libs_path):
+    print("No existe carpeta")
+    shutil.copytree(libs_path, os.path.join(base_path, "scipy"), dirs_exist_ok=True)
+    libs_path += '.libs'
+    shutil.copytree(libs_path, os.path.join(base_path, "scipy.libs"), dirs_exist_ok=True)
+
 cur_path = base_path + 'modules' + os.sep + 'ImageWork' + os.sep + 'libs' + os.sep
 sys.path.append(cur_path)
 
@@ -388,5 +397,6 @@ if module == "compareFolder":
             SetVar(result, similarities)
     
     except Exception as e:
-        PrintException()
+        import traceback
+        traceback.print_exc()
         raise e

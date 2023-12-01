@@ -207,23 +207,20 @@ def _get_linear_ramps(padded, axis, width_pair, end_value_pair):
     """
     edge_pair = _get_edges(padded, axis, width_pair)
 
-    left_ramp = np.linspace(
-        start=end_value_pair[0],
-        stop=edge_pair[0].squeeze(axis),  # Dimensions is replaced by linspace
-        num=width_pair[0],
-        endpoint=False,
-        dtype=padded.dtype,
-        axis=axis,
+    left_ramp, right_ramp = (
+        np.linspace(
+            start=end_value,
+            stop=edge.squeeze(axis), # Dimension is replaced by linspace
+            num=width,
+            endpoint=False,
+            dtype=padded.dtype,
+            axis=axis
+        )
+        for end_value, edge, width in zip(
+            end_value_pair, edge_pair, width_pair
+        )
     )
-
-    right_ramp = np.linspace(
-        start=end_value_pair[1],
-        stop=edge_pair[1].squeeze(axis),  # Dimension is replaced by linspace
-        num=width_pair[1],
-        endpoint=False,
-        dtype=padded.dtype,
-        axis=axis,
-    )
+        
     # Reverse linear space in appropriate dimension
     right_ramp = right_ramp[_slice_at_axis(slice(None, None, -1), axis)]
 
@@ -381,7 +378,7 @@ def _set_reflect_both(padded, axis, width_pair, method, include_edge=False):
     return left_pad, right_pad
 
 
-def _set_wrap_both(padded, axis, width_pair):
+def _set_wrap_both(padded, axis, width_pair, original_period):
     """
     Pad `axis` of `arr` with wrapped values.
 
@@ -394,6 +391,8 @@ def _set_wrap_both(padded, axis, width_pair):
     width_pair : (int, int)
         Pair of widths that mark the pad area on both sides in the given
         dimension.
+    original_period : int
+        Original length of data on `axis` of `arr`.
 
     Returns
     -------
@@ -403,6 +402,9 @@ def _set_wrap_both(padded, axis, width_pair):
     """
     left_pad, right_pad = width_pair
     period = padded.shape[axis] - right_pad - left_pad
+    # Avoid wrapping with only a subset of the original area by ensuring period
+    # can only be a multiple of the original area's length.
+    period = period // original_period * original_period
 
     # If the current dimension of `arr` doesn't contain enough valid values
     # (not part of the undefined pad area) we need to pad multiple times.
@@ -413,14 +415,12 @@ def _set_wrap_both(padded, axis, width_pair):
 
     if left_pad > 0:
         # Pad with wrapped values on left side
-        # First slice chunk from right side of the non-pad area.
+        # First slice chunk from left side of the non-pad area.
         # Use min(period, left_pad) to ensure that chunk is not larger than
-        # pad area
-        right_slice = _slice_at_axis(
-            slice(-right_pad - min(period, left_pad),
-                  -right_pad if right_pad != 0 else None),
-            axis
-        )
+        # pad area.
+        slice_end = left_pad + period
+        slice_start = slice_end - min(period, left_pad)
+        right_slice = _slice_at_axis(slice(slice_start, slice_end), axis)
         right_chunk = padded[right_slice]
 
         if left_pad > period:
@@ -434,11 +434,12 @@ def _set_wrap_both(padded, axis, width_pair):
 
     if right_pad > 0:
         # Pad with wrapped values on right side
-        # First slice chunk from left side of the non-pad area.
+        # First slice chunk from right side of the non-pad area.
         # Use min(period, right_pad) to ensure that chunk is not larger than
-        # pad area
-        left_slice = _slice_at_axis(
-            slice(left_pad, left_pad + min(period, right_pad),), axis)
+        # pad area.
+        slice_start = -right_pad - period
+        slice_end = slice_start + min(period, right_pad)
+        left_slice = _slice_at_axis(slice(slice_start, slice_end), axis)
         left_chunk = padded[left_slice]
 
         if right_pad > period:
@@ -540,11 +541,12 @@ def pad(array, pad_width, mode='constant', **kwargs):
         The array to pad.
     pad_width : {sequence, array_like, int}
         Number of values padded to the edges of each axis.
-        ((before_1, after_1), ... (before_N, after_N)) unique pad widths
+        ``((before_1, after_1), ... (before_N, after_N))`` unique pad widths
         for each axis.
-        ((before, after),) yields same before and after pad for each axis.
-        (pad,) or int is a shortcut for before = after = pad width for all
-        axes.
+        ``(before, after)`` or ``((before, after),)`` yields same before
+        and after pad for each axis.
+        ``(pad,)`` or ``int`` is a shortcut for before = after = pad width
+        for all axes.
     mode : str or function, optional
         One of the following string values or a user supplied function.
 
@@ -589,14 +591,14 @@ def pad(array, pad_width, mode='constant', **kwargs):
         Used in 'maximum', 'mean', 'median', and 'minimum'.  Number of
         values at edge of each axis used to calculate the statistic value.
 
-        ((before_1, after_1), ... (before_N, after_N)) unique statistic
+        ``((before_1, after_1), ... (before_N, after_N))`` unique statistic
         lengths for each axis.
 
-        ((before, after),) yields same before and after statistic lengths
-        for each axis.
+        ``(before, after)`` or ``((before, after),)`` yields same before
+        and after statistic lengths for each axis.
 
-        (stat_length,) or int is a shortcut for before = after = statistic
-        length for all axes.
+        ``(stat_length,)`` or ``int`` is a shortcut for
+        ``before = after = statistic`` length for all axes.
 
         Default is ``None``, to use the entire axis.
     constant_values : sequence or scalar, optional
@@ -606,11 +608,11 @@ def pad(array, pad_width, mode='constant', **kwargs):
         ``((before_1, after_1), ... (before_N, after_N))`` unique pad constants
         for each axis.
 
-        ``((before, after),)`` yields same before and after constants for each
-        axis.
+        ``(before, after)`` or ``((before, after),)`` yields same before
+        and after constants for each axis.
 
-        ``(constant,)`` or ``constant`` is a shortcut for ``before = after = constant`` for
-        all axes.
+        ``(constant,)`` or ``constant`` is a shortcut for
+        ``before = after = constant`` for all axes.
 
         Default is 0.
     end_values : sequence or scalar, optional
@@ -620,11 +622,11 @@ def pad(array, pad_width, mode='constant', **kwargs):
         ``((before_1, after_1), ... (before_N, after_N))`` unique end values
         for each axis.
 
-        ``((before, after),)`` yields same before and after end values for each
-        axis.
+        ``(before, after)`` or ``((before, after),)`` yields same before
+        and after end values for each axis.
 
-        ``(constant,)`` or ``constant`` is a shortcut for ``before = after = constant`` for
-        all axes.
+        ``(constant,)`` or ``constant`` is a shortcut for
+        ``before = after = constant`` for all axes.
 
         Default is 0.
     reflect_type : {'even', 'odd'}, optional
@@ -783,7 +785,7 @@ def pad(array, pad_width, mode='constant', **kwargs):
     try:
         unsupported_kwargs = set(kwargs) - set(allowed_kwargs[mode])
     except KeyError:
-        raise ValueError("mode '{}' is not supported".format(mode))
+        raise ValueError("mode '{}' is not supported".format(mode)) from None
     if unsupported_kwargs:
         raise ValueError("unsupported keyword arguments for mode '{}': {}"
                          .format(mode, unsupported_kwargs))
@@ -869,11 +871,12 @@ def pad(array, pad_width, mode='constant', **kwargs):
     elif mode == "wrap":
         for axis, (left_index, right_index) in zip(axes, pad_width):
             roi = _view_roi(padded, original_area_slice, axis)
+            original_period = padded.shape[axis] - right_index - left_index
             while left_index > 0 or right_index > 0:
                 # Iteratively pad until dimension is filled with wrapped
                 # values. This is necessary if the pad area is larger than
                 # the length of the original values in the current dimension.
                 left_index, right_index = _set_wrap_both(
-                    roi, axis, (left_index, right_index))
+                    roi, axis, (left_index, right_index), original_period)
 
     return padded

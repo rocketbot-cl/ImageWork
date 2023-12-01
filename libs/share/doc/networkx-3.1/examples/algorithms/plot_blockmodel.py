@@ -26,8 +26,8 @@ from collections import defaultdict
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
-from scipy.cluster import hierarchy
-from scipy.spatial import distance
+from r_scipy.cluster import hierarchy
+from r_scipy.spatial import distance
 
 
 def create_hc(G):

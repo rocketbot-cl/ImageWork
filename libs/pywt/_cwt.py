@@ -12,13 +12,13 @@ import numpy as np
 
 try:
     # Prefer scipy.fft (new in SciPy 1.4)
-    import scipy.fft
-    fftmodule = scipy.fft
+    import r_scipy.fft as fft
+    fftmodule = fft
     next_fast_len = fftmodule.next_fast_len
 except ImportError:
     try:
-        import scipy.fftpack
-        fftmodule = scipy.fftpack
+        import r_scipy.fftpack as fftpack
+        fftmodule = fftpack
         next_fast_len = fftmodule.next_fast_len
     except ImportError:
         fftmodule = np.fft

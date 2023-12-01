@@ -50,8 +50,8 @@ CONFIG = _cleanup(
                 "commands": "gfortran",
             },
             "pythran": {
-                "version": "0.13.1",
-                "include directory": r"C:\Users\runneradmin\AppData\Local\Temp\pip-build-env-ydzuhf81\overlay\Lib\site-packages/pythran"
+                "version": "0.14.0",
+                "include directory": r"C:\Users\runneradmin\AppData\Local\Temp\pip-build-env-4cqqe0_2\overlay\Lib\site-packages/pythran"
             },
         },
         "Machine Information": {
@@ -67,12 +67,12 @@ CONFIG = _cleanup(
                 "endian": "little",
                 "system": "windows",
             },
-            "cross-compiled": bool("False".lower().replace('false', '')),
+            "cross-compiled": bool("0".lower().replace('false', '')),
         },
         "Build Dependencies": {
             "blas": {
                 "name": "openblas",
-                "found": bool("True".lower().replace('false', '')),
+                "found": bool("1".lower().replace('false', '')),
                 "version": "0.3.21.dev",
                 "detection method": "pkgconfig",
                 "include directory": r"/c/opt/64/include",
@@ -82,7 +82,7 @@ CONFIG = _cleanup(
             },
             "lapack": {
                 "name": "openblas",
-                "found": bool("True".lower().replace('false', '')),
+                "found": bool("1".lower().replace('false', '')),
                 "version": "0.3.21.dev",
                 "detection method": "pkgconfig",
                 "include directory": r"/c/opt/64/include",
@@ -92,13 +92,13 @@ CONFIG = _cleanup(
             },
             "pybind11": {
                 "name": "pybind11",
-                "version": "2.10.4",
+                "version": "2.11.0",
                 "detection method": "config-tool",
                 "include directory": r"unknown",
             },
         },
         "Python Information": {
-            "path": r"C:\Users\runneradmin\AppData\Local\Temp\cibw-run-196xxil4\cp310-win_amd64\build\venv\Scripts\python.exe",
+            "path": r"C:\Users\runneradmin\AppData\Local\Temp\cibw-run-6sotklje\cp310-win_amd64\build\venv\Scripts\python.exe",
             "version": "3.10",
         },
     }

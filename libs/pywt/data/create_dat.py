@@ -21,7 +21,7 @@ import numpy as np
 
 
 def main():
-    from scipy.misc import imread
+    from r_scipy.misc import imread
 
     if len(sys.argv) != 3:
         print(__doc__)
