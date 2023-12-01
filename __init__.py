@@ -111,7 +111,7 @@ def combine_horizontal(img1, img2):
     
     return combined_image
 
-def calculate_similarity(image1, image2, output_folder=None, resize=(500, 500)):
+def calculate_similarity(image1, image2, output_folder=None, resize="500, 500"):
     from skimage.metrics import structural_similarity
     import numpy as np
 
@@ -380,7 +380,7 @@ if module == "combineImages":
 if module == "compareFolder":
     image1 = GetParams("image1")
     folder = GetParams("images_folder")
-    resize = GetParams("resize")
+    resize = GetParams("resize") or "500, 500"
     output_folder = GetParams("output_folder")
     result = GetParams("result")
 
@@ -388,6 +388,9 @@ if module == "compareFolder":
         similarities = {}
         for filename in os.listdir(folder):
             if not os.path.isfile(folder + os.sep + filename):
+                continue
+            # check if the file is an image
+            if filename[-4:] not in [".jpg", ".png", ".bmp", ".gif", ".tiff", ".tif", ".jfif"]:
                 continue
             result_similarity = calculate_similarity(image1, folder + os.sep + filename, output_folder, resize)
             similarity_percentage = result_similarity * 100
