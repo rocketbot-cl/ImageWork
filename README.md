@@ -18,7 +18,7 @@ To install the module in Rocketbot Studio, it can be done in two ways:
 This command allows you to merge two images into one, the second image is superimposed on the first at the indicated coordinates. The path of the resulting file will be the same as the first image
 
 2. Convert to PDF  
-Convert JPG files to PDF 
+Convert image files from a folder to PDF 
 
 3. Search image in image  
 This command searches if image 1 contains image 2 inside and returns True or False depending on the result
@@ -30,8 +30,10 @@ Extract text from a specific area of an image
 Crop an image from coordinates
 
 6. Combine images  
-Combines two images into one while maintaining the size of each image. It can be combined horizontally or vertically  
+Combines two images into one while maintaining the size of each image. It can be combined horizontally or vertically
 
+7. Compare similarities between images  
+Compares an image with a folder of images and returns the percentage of similarity between them.  
 
 
 

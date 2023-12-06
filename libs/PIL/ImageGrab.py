@@ -2,7 +2,7 @@
 # The Python Imaging Library
 # $Id$
 #
-# screen grabber (macOS and Windows only)
+# screen grabber
 #
 # History:
 # 2001-04-26 fl  created
@@ -15,59 +15,94 @@
 # See the README file for information on usage and redistribution.
 #
 
+import io
+import os
+import shutil
+import subprocess
 import sys
+import tempfile
 
 from . import Image
 
-if sys.platform == "win32":
-    grabber = Image.core.grabscreen
-elif sys.platform == "darwin":
-    import os
-    import tempfile
-    import subprocess
-else:
-    raise ImportError("ImageGrab is macOS and Windows only")
 
-
-def grab(bbox=None, include_layered_windows=False, all_screens=False):
-    if sys.platform == "darwin":
-        fh, filepath = tempfile.mkstemp(".png")
-        os.close(fh)
-        subprocess.call(["screencapture", "-x", filepath])
-        im = Image.open(filepath)
-        im.load()
-        os.unlink(filepath)
+def grab(bbox=None, include_layered_windows=False, all_screens=False, xdisplay=None):
+    if xdisplay is None:
+        if sys.platform == "darwin":
+            fh, filepath = tempfile.mkstemp(".png")
+            os.close(fh)
+            args = ["screencapture"]
+            if bbox:
+                left, top, right, bottom = bbox
+                args += ["-R", f"{left},{top},{right-left},{bottom-top}"]
+            subprocess.call(args + ["-x", filepath])
+            im = Image.open(filepath)
+            im.load()
+            os.unlink(filepath)
+            if bbox:
+                im_resized = im.resize((right - left, bottom - top))
+                im.close()
+                return im_resized
+            return im
+        elif sys.platform == "win32":
+            offset, size, data = Image.core.grabscreen_win32(
+                include_layered_windows, all_screens
+            )
+            im = Image.frombytes(
+                "RGB",
+                size,
+                data,
+                # RGB, 32-bit line padding, origin lower left corner
+                "raw",
+                "BGR",
+                (size[0] * 3 + 3) & -4,
+                -1,
+            )
+            if bbox:
+                x0, y0 = offset
+                left, top, right, bottom = bbox
+                im = im.crop((left - x0, top - y0, right - x0, bottom - y0))
+            return im
+    try:
+        if not Image.core.HAVE_XCB:
+            msg = "Pillow was built without XCB support"
+            raise OSError(msg)
+        size, data = Image.core.grabscreen_x11(xdisplay)
+    except OSError:
+        if (
+            xdisplay is None
+            and sys.platform not in ("darwin", "win32")
+            and shutil.which("gnome-screenshot")
+        ):
+            fh, filepath = tempfile.mkstemp(".png")
+            os.close(fh)
+            subprocess.call(["gnome-screenshot", "-f", filepath])
+            im = Image.open(filepath)
+            im.load()
+            os.unlink(filepath)
+            if bbox:
+                im_cropped = im.crop(bbox)
+                im.close()
+                return im_cropped
+            return im
+        else:
+            raise
+    else:
+        im = Image.frombytes("RGB", size, data, "raw", "BGRX", size[0] * 4, 1)
         if bbox:
             im = im.crop(bbox)
-    else:
-        offset, size, data = grabber(include_layered_windows, all_screens)
-        im = Image.frombytes(
-            "RGB",
-            size,
-            data,
-            # RGB, 32-bit line padding, origin lower left corner
-            "raw",
-            "BGR",
-            (size[0] * 3 + 3) & -4,
-            -1,
-        )
-        if bbox:
-            x0, y0 = offset
-            left, top, right, bottom = bbox
-            im = im.crop((left - x0, top - y0, right - x0, bottom - y0))
-    return im
+        return im
 
 
 def grabclipboard():
     if sys.platform == "darwin":
-        fh, filepath = tempfile.mkstemp(".jpg")
+        fh, filepath = tempfile.mkstemp(".png")
         os.close(fh)
         commands = [
             'set theFile to (open for access POSIX file "'
             + filepath
             + '" with write permission)',
             "try",
-            "    write (the clipboard as JPEG picture) to theFile",
+            "    write (the clipboard as «class PNGf») to theFile",
             "end try",
             "close access theFile",
         ]
@@ -82,11 +117,61 @@ def grabclipboard():
             im.load()
         os.unlink(filepath)
         return im
-    else:
-        data = Image.core.grabclipboard()
-        if isinstance(data, bytes):
-            from . import BmpImagePlugin
-            import io
+    elif sys.platform == "win32":
+        fmt, data = Image.core.grabclipboard_win32()
+        if fmt == "file":  # CF_HDROP
+            import struct
 
-            return BmpImagePlugin.DibImageFile(io.BytesIO(data))
-        return data
+            o = struct.unpack_from("I", data)[0]
+            if data[16] != 0:
+                files = data[o:].decode("utf-16le").split("\0")
+            else:
+                files = data[o:].decode("mbcs").split("\0")
+            return files[: files.index("")]
+        if isinstance(data, bytes):
+            data = io.BytesIO(data)
+            if fmt == "png":
+                from . import PngImagePlugin
+
+                return PngImagePlugin.PngImageFile(data)
+            elif fmt == "DIB":
+                from . import BmpImagePlugin
+
+                return BmpImagePlugin.DibImageFile(data)
+        return None
+    else:
+        if os.getenv("WAYLAND_DISPLAY"):
+            session_type = "wayland"
+        elif os.getenv("DISPLAY"):
+            session_type = "x11"
+        else:  # Session type check failed
+            session_type = None
+
+        if shutil.which("wl-paste") and session_type in ("wayland", None):
+            output = subprocess.check_output(["wl-paste", "-l"]).decode()
+            mimetypes = output.splitlines()
+            if "image/png" in mimetypes:
+                mimetype = "image/png"
+            elif mimetypes:
+                mimetype = mimetypes[0]
+            else:
+                mimetype = None
+
+            args = ["wl-paste"]
+            if mimetype:
+                args.extend(["-t", mimetype])
+        elif shutil.which("xclip") and session_type in ("x11", None):
+            args = ["xclip", "-selection", "clipboard", "-t", "image/png", "-o"]
+        else:
+            msg = "wl-paste or xclip is required for ImageGrab.grabclipboard() on Linux"
+            raise NotImplementedError(msg)
+
+        p = subprocess.run(args, capture_output=True)
+        err = p.stderr
+        if err:
+            msg = f"{args[0]} error: {err.strip().decode()}"
+            raise ChildProcessError(msg)
+        data = io.BytesIO(p.stdout)
+        im = Image.open(data)
+        im.load()
+        return im

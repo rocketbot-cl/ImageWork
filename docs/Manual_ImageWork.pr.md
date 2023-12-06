@@ -4,7 +4,7 @@ Módulo para o gerenciamento de imagens. Permite mesclar, pesquisar imagem em im
 
 *Read this in other languages: [English](Manual_ImageWork.md), [Português](Manual_ImageWork.pr.md), [Español](Manual_ImageWork.es.md)*
   
-![banner](imgs/Banner_ImageWork.png o jpg)
+![banner](imgs/Banner_ImageWork.png)
 ## Como instalar este módulo
   
 Para instalar o módulo no Rocketbot Studio, pode ser feito de duas formas:
@@ -26,10 +26,10 @@ Esse comando permite mesclar duas imagens em uma; a segunda imagem é sobreposta
 
 ### Converter para PDF
   
-Converter arquivos JPG para PDF
+Converter arquivos de imagem de uma pasta para PDF
 |Parâmetros|Descrição|exemplo|
 | --- | --- | --- |
-|Caminho da pasta com arquivos JPG|Pasta com arquivos JPG para converter para PDF|JPG|
+|Pasta com arquivos de imagem para converter em PDF|Caminho da pasta com arquivos de imagem|C:/Users/User/Desktop/pasta_imagens|
 |Nome e caminho do PDF|Caminho e nome do PDF a criar|PDF|
 |Resultado|Variável onde True ou False é armazenado de acordo com o resultado da operação||
 
@@ -73,3 +73,14 @@ Combina duas imagens em uma mantendo o tamanho de cada imagem. Pode ser combinad
 |Imagem 2|Imagem 2 para combinar. Será posicionada à direita ou abaixo da imagem 1 de acordo com a orientação selecionada|C:/Users/User/desktop/imagem2.png|
 |Orientação|Selecione a orientação da imagem resultante|Horizontal|
 |Imagem combinada|Caminho da imagem resultante|C:/Users/User/desktop/imagemCombinada.png|
+
+### Comparar semelhanças entre imagens
+  
+Compara uma imagem com uma pasta de imagens e retorna a porcentagem de semelhança entre elas.
+|Parâmetros|Descrição|exemplo|
+| --- | --- | --- |
+|Imagem para comparar|Imagem para comparar com as imagens da pasta selecionada.|C:/Users/User/desktop/imagem1.png|
+|Pasta de imagens|Pasta com as imagens para comparar com a imagem selecionada.|C:/Users/User/desktop/pastaImagens|
+|Pasta de resultados|Pasta onde os resultados da comparação serão armazenados.|C:/Users/User/desktop/resultados|
+|Tamanho de redimensionamento em px|Para que o comando funcione corretamente, é necessário estabelecer um tamanho de redimensionamento para as imagens. Por padrão, é 500,500|500,500|
+|Resultado|Variável onde o nível de correspondência com cada imagem será armazenado|variável|

@@ -1,12 +1,8 @@
 
-# THIS FILE IS GENERATED FROM NUMPY SETUP.PY
-#
-# To compare versions robustly, use `numpy.lib.NumpyVersion`
-short_version = '1.19.0'
-version = '1.19.0'
-full_version = '1.19.0'
-git_revision = '92ebe1e9a6aeb47a881a1226b08218175776f9ea'
-release = True
+version = "1.26.2"
+__version__ = version
+full_version = version
 
-if not release:
-    version = full_version
+git_revision = "03b62604eead0f7d279a5a4c094743eb29647368"
+release = 'dev' not in version and '+' not in version
+short_version = version.split("+")[0]

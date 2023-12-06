@@ -1,6 +1,7 @@
+import pytest
 from numpy import (
     logspace, linspace, geomspace, dtype, array, sctypes, arange, isnan,
-    ndarray, sqrt, nextafter, stack
+    ndarray, sqrt, nextafter, stack, errstate
     )
 from numpy.testing import (
     assert_, assert_equal, assert_raises, assert_array_equal, assert_allclose,
@@ -65,6 +66,33 @@ class TestLogspace:
         t5 = logspace(start, stop, 6, axis=-1)
         assert_equal(t5, t2.T)
 
+    @pytest.mark.parametrize("axis", [0, 1, -1])
+    def test_base_array(self, axis: int):
+        start = 1
+        stop = 2
+        num = 6
+        base = array([1, 2])
+        t1 = logspace(start, stop, num=num, base=base, axis=axis)
+        t2 = stack(
+            [logspace(start, stop, num=num, base=_base) for _base in base],
+            axis=(axis + 1) % t1.ndim,
+        )
+        assert_equal(t1, t2)
+
+    @pytest.mark.parametrize("axis", [0, 1, -1])
+    def test_stop_base_array(self, axis: int):
+        start = 1
+        stop = array([2, 3])
+        num = 6
+        base = array([1, 2])
+        t1 = logspace(start, stop, num=num, base=base, axis=axis)
+        t2 = stack(
+            [logspace(start, _stop, num=num, base=_base)
+             for _stop, _base in zip(stop, base)],
+            axis=(axis + 1) % t1.ndim,
+        )
+        assert_equal(t1, t2)
+
     def test_dtype(self):
         y = logspace(0, 6, dtype='float32')
         assert_equal(y.dtype, dtype('float32'))
@@ -112,6 +140,40 @@ class TestGeomspace:
         y = geomspace(-100, -1, num=3)
         assert_array_equal(y, [-100, -10, -1])
         assert_array_equal(y.imag, 0)
+
+    def test_boundaries_match_start_and_stop_exactly(self):
+        # make sure that the boundaries of the returned array exactly
+        # equal 'start' and 'stop' - this isn't obvious because
+        # np.exp(np.log(x)) isn't necessarily exactly equal to x
+        start = 0.3
+        stop = 20.3
+
+        y = geomspace(start, stop, num=1)
+        assert_equal(y[0], start)
+
+        y = geomspace(start, stop, num=1, endpoint=False)
+        assert_equal(y[0], start)
+
+        y = geomspace(start, stop, num=3)
+        assert_equal(y[0], start)
+        assert_equal(y[-1], stop)
+
+        y = geomspace(start, stop, num=3, endpoint=False)
+        assert_equal(y[0], start)
+
+    def test_nan_interior(self):
+        with errstate(invalid='ignore'):
+            y = geomspace(-3, 3, num=4)
+
+        assert_equal(y[0], -3.0)
+        assert_(isnan(y[1:-1]).all())
+        assert_equal(y[3], 3.0)
+
+        with errstate(invalid='ignore'):
+            y = geomspace(-3, 3, num=4, endpoint=False)
+
+        assert_equal(y[0], -3.0)
+        assert_(isnan(y[1:]).all())
 
     def test_complex(self):
         # Purely imaginary
@@ -368,3 +430,17 @@ class TestLinspace:
         stop = array(2, dtype='O')
         y = linspace(start, stop, 3)
         assert_array_equal(y, array([1., 1.5, 2.]))
+                    
+    def test_round_negative(self):
+        y = linspace(-1, 3, num=8, dtype=int)
+        t = array([-1, -1, 0, 0, 1, 1, 2, 3], dtype=int)
+        assert_array_equal(y, t)
+
+    def test_any_step_zero_and_not_mult_inplace(self):
+        # any_step_zero is True, _mult_inplace is False
+        start = array([0.0, 1.0])
+        stop = array([2.0, 1.0])
+        y = linspace(start, stop, 3)
+        assert_array_equal(y, array([[0.0, 1.0], [1.0, 1.0], [2.0, 1.0]]))
+    
+

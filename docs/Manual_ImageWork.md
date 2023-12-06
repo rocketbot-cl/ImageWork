@@ -26,10 +26,10 @@ This command allows you to merge two images into one, the second image is superi
 
 ### Convert to PDF
   
-Convert JPG files to PDF 
+Convert image files from a folder to PDF 
 |Parameters|Description|example|
 | --- | --- | --- |
-|Folder path with JPG files|Folder with JPG files to convert to PDF|JPG|
+|Path of the folder with image files|Folder with image files to convert to PDF|C:/Users/User/Desktop/images_folder|
 |Name and path of PDF|Path and name of PDF to create|PDF|
 |Result|Variable where True or False is stored according to the result of the operation||
 
@@ -73,3 +73,14 @@ Combines two images into one while maintaining the size of each image. It can be
 |Image 2|Image 2 to combine. It will be positioned to the right or below image 1 according to the selected orientation|C:/Users/User/desktop/image2.png|
 |Orientation|Select the orientation of the resulting image|Horizontal|
 |Combined image|Path of the resulting image|C:/Users/User/desktop/combinedImage.png|
+
+### Compare similarities between images
+  
+Compares an image with a folder of images and returns the percentage of similarity between them.
+|Parameters|Description|example|
+| --- | --- | --- |
+|Image to compare|Image to compare with the images of the selected folder.|C:/Users/User/desktop/image1.png|
+|Images folder|Folder with the images to compare with the selected image.|C:/Users/User/desktop/imagesFolder|
+|Results folder|Folder where the results of the comparison will be stored.|C:/Users/User/desktop/results|
+|Resize size in px|For the command to work correctly, it is necessary to establish a resize size for the images. By default it is 500,500|500,500|
+|Result|Variable where the level of matches with each image will be stored|variable|

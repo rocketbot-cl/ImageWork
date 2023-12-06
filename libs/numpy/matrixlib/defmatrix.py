@@ -3,9 +3,10 @@ __all__ = ['matrix', 'bmat', 'mat', 'asmatrix']
 import sys
 import warnings
 import ast
+
+from .._utils import set_module
 import numpy.core.numeric as N
 from numpy.core.numeric import concatenate, isscalar
-from numpy.core.overrides import set_module
 # While not in __all__, matrix_power used to be defined here, so we import
 # it for backward compatibility.
 from numpy.linalg import matrix_power
@@ -329,7 +330,7 @@ class matrix(N.ndarray):
         Parameters
         ----------
         axis : None or int or tuple of ints, optional
-            Selects a subset of the single-dimensional entries in the shape.
+            Selects a subset of the axes of length one in the shape.
             If an axis is selected with shape entry greater than one,
             an error is raised.
 
@@ -829,9 +830,9 @@ class matrix(N.ndarray):
         """
         M, N = self.shape
         if M == N:
-            from numpy.dual import inv as func
+            from numpy.linalg import inv as func
         else:
-            from numpy.dual import pinv as func
+            from numpy.linalg import pinv as func
         return asmatrix(func(self))
 
     @property

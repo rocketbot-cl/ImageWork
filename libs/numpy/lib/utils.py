@@ -4,20 +4,73 @@ import textwrap
 import types
 import re
 import warnings
+import functools
+import platform
 
+from .._utils import set_module
 from numpy.core.numerictypes import issubclass_, issubsctype, issubdtype
-from numpy.core.overrides import set_module
 from numpy.core import ndarray, ufunc, asarray
 import numpy as np
-
-# getargspec and formatargspec were removed in Python 3.6
-from numpy.compat import getargspec, formatargspec
 
 __all__ = [
     'issubclass_', 'issubsctype', 'issubdtype', 'deprecate',
     'deprecate_with_doc', 'get_include', 'info', 'source', 'who',
-    'lookfor', 'byte_bounds', 'safe_eval'
+    'lookfor', 'byte_bounds', 'safe_eval', 'show_runtime'
     ]
+
+
+def show_runtime():
+    """
+    Print information about various resources in the system
+    including available intrinsic support and BLAS/LAPACK library
+    in use
+
+    .. versionadded:: 1.24.0
+
+    See Also
+    --------
+    show_config : Show libraries in the system on which NumPy was built.
+
+    Notes
+    -----
+    1. Information is derived with the help of `threadpoolctl <https://pypi.org/project/threadpoolctl/>`_
+       library if available.
+    2. SIMD related information is derived from ``__cpu_features__``,
+       ``__cpu_baseline__`` and ``__cpu_dispatch__``
+
+    """
+    from numpy.core._multiarray_umath import (
+        __cpu_features__, __cpu_baseline__, __cpu_dispatch__
+    )
+    from pprint import pprint
+    config_found = [{
+        "numpy_version": np.__version__,
+        "python": sys.version,
+        "uname": platform.uname(),
+        }]
+    features_found, features_not_found = [], []
+    for feature in __cpu_dispatch__:
+        if __cpu_features__[feature]:
+            features_found.append(feature)
+        else:
+            features_not_found.append(feature)
+    config_found.append({
+        "simd_extensions": {
+            "baseline": __cpu_baseline__,
+            "found": features_found,
+            "not_found": features_not_found
+        }
+    })
+    try:
+        from threadpoolctl import threadpool_info
+        config_found.extend(threadpool_info())
+    except ImportError:
+        print("WARNING: `threadpoolctl` not found in system!"
+              " Install it by `pip install threadpoolctl`."
+              " Once installed, try `np.show_runtime` again"
+              " for more detailed build information")
+    pprint(config_found)
+
 
 def get_include():
     """
@@ -28,8 +81,7 @@ def get_include():
 
     Notes
     -----
-    When using ``distutils``, for example in ``setup.py``.
-    ::
+    When using ``distutils``, for example in ``setup.py``::
 
         import numpy as np
         ...
@@ -47,11 +99,6 @@ def get_include():
         import numpy.core as core
         d = os.path.join(os.path.dirname(core.__file__), 'include')
     return d
-
-
-def _set_function_name(func, name):
-    func.__name__ = name
-    return func
 
 
 class _Deprecate:
@@ -81,10 +128,7 @@ class _Deprecate:
         message = self.message
 
         if old_name is None:
-            try:
-                old_name = func.__name__
-            except AttributeError:
-                old_name = func.__name__
+            old_name = func.__name__
         if new_name is None:
             depdoc = "`%s` is deprecated!" % old_name
         else:
@@ -94,12 +138,12 @@ class _Deprecate:
         if message is not None:
             depdoc += "\n" + message
 
-        def newfunc(*args,**kwds):
-            """`arrayrange` is deprecated, use `arange` instead!"""
+        @functools.wraps(func)
+        def newfunc(*args, **kwds):
             warnings.warn(depdoc, DeprecationWarning, stacklevel=2)
             return func(*args, **kwds)
 
-        newfunc = _set_function_name(newfunc, old_name)
+        newfunc.__name__ = old_name
         doc = func.__doc__
         if doc is None:
             doc = depdoc
@@ -121,12 +165,7 @@ class _Deprecate:
             depdoc = textwrap.indent(depdoc, ' ' * indent)
             doc = '\n\n'.join([depdoc, doc])
         newfunc.__doc__ = doc
-        try:
-            d = func.__dict__
-        except AttributeError:
-            pass
-        else:
-            newfunc.__dict__.update(d)
+
         return newfunc
 
 
@@ -196,7 +235,32 @@ def deprecate(*args, **kwargs):
     else:
         return _Deprecate(*args, **kwargs)
 
-deprecate_with_doc = lambda msg: _Deprecate(message=msg)
+
+def deprecate_with_doc(msg):
+    """
+    Deprecates a function and includes the deprecation in its docstring.
+
+    This function is used as a decorator. It returns an object that can be
+    used to issue a DeprecationWarning, by passing the to-be decorated
+    function as argument, this adds warning to the to-be decorated function's
+    docstring and returns the new function object.
+
+    See Also
+    --------
+    deprecate : Decorate a function such that it issues a `DeprecationWarning`
+
+    Parameters
+    ----------
+    msg : str
+        Additional explanation of the deprecation. Displayed in the
+        docstring after the warning.
+
+    Returns
+    -------
+    obj : object
+
+    """
+    return _Deprecate(message=msg)
 
 
 #--------------------------------------------
@@ -329,8 +393,7 @@ def who(vardict=None):
     maxshape = 0
     maxbyte = 0
     totalbytes = 0
-    for k in range(len(sta)):
-        val = sta[k]
+    for val in sta:
         if maxname < len(val[0]):
             maxname = len(val[0])
         if maxshape < len(val[1]):
@@ -347,8 +410,7 @@ def who(vardict=None):
         prval = "Name %s Shape %s Bytes %s Type" % (sp1*' ', sp2*' ', sp3*' ')
         print(prval + "\n" + "="*(len(prval)+5) + "\n")
 
-    for k in range(len(sta)):
-        val = sta[k]
+    for val in sta:
         print("%s %s %s %s %s %s %s" % (val[0], ' '*(sp1-len(val[0])+4),
                                         val[1], ' '*(sp2-len(val[1])+5),
                                         val[2], ' '*(sp3-len(val[2])+5),
@@ -409,7 +471,7 @@ def _makenamedict(module='numpy'):
     return thedict, dictlist
 
 
-def _info(obj, output=sys.stdout):
+def _info(obj, output=None):
     """Provide information about ndarray obj.
 
     Parameters
@@ -434,6 +496,9 @@ def _info(obj, output=sys.stdout):
     nm = getattr(cls, '__name__', cls)
     strides = obj.strides
     endian = obj.dtype.byteorder
+
+    if output is None:
+        output = sys.stdout
 
     print("class: ", nm, file=output)
     print("shape: ", obj.shape, file=output)
@@ -461,22 +526,24 @@ def _info(obj, output=sys.stdout):
 
 
 @set_module('numpy')
-def info(object=None, maxwidth=76, output=sys.stdout, toplevel='numpy'):
+def info(object=None, maxwidth=76, output=None, toplevel='numpy'):
     """
-    Get help information for a function, class, or module.
+    Get help information for an array, function, class, or module.
 
     Parameters
     ----------
     object : object or str, optional
-        Input object or name to get information about. If `object` is a
-        numpy object, its docstring is given. If it is a string, available
-        modules are searched for matching objects.  If None, information
-        about `info` itself is returned.
+        Input object or name to get information about. If `object` is
+        an `ndarray` instance, information about the array is printed.
+        If `object` is a numpy object, its docstring is given. If it is
+        a string, available modules are searched for matching objects.
+        If None, information about `info` itself is returned.
     maxwidth : int, optional
         Printing width.
     output : file like object, optional
         File like object that the output is written to, default is
-        ``stdout``.  The object has to be opened in 'w' or 'a' mode.
+        ``None``, in which case ``sys.stdout`` will be used.
+        The object has to be opened in 'w' or 'a' mode.
     toplevel : str, optional
         Start search at this level.
 
@@ -509,6 +576,22 @@ def info(object=None, maxwidth=76, output=sys.stdout, toplevel='numpy'):
          *** Repeat reference found in numpy.fft.fftpack ***
          *** Total of 3 references found. ***
 
+    When the argument is an array, information about the array is printed.
+
+    >>> a = np.array([[1 + 2j, 3, -4], [-5j, 6, 0]], dtype=np.complex64)
+    >>> np.info(a)
+    class:  ndarray
+    shape:  (2, 3)
+    strides:  (24, 8)
+    itemsize:  8
+    aligned:  True
+    contiguous:  True
+    fortran:  False
+    data pointer: 0x562b6e0d2860  # may vary
+    byteorder:  little
+    byteswap:  False
+    type: complex64
+
     """
     global _namedict, _dictlist
     # Local import to speed up numpy's import time.
@@ -520,6 +603,9 @@ def info(object=None, maxwidth=76, output=sys.stdout, toplevel='numpy'):
         object = object._ppimport_module
     elif hasattr(object, '_ppimport_attr'):
         object = object._ppimport_attr
+
+    if output is None:
+        output = sys.stdout
 
     if object is None:
         info(info)
@@ -554,9 +640,12 @@ def info(object=None, maxwidth=76, output=sys.stdout, toplevel='numpy'):
                   file=output
                   )
 
-    elif inspect.isfunction(object):
+    elif inspect.isfunction(object) or inspect.ismethod(object):
         name = object.__name__
-        arguments = formatargspec(*getargspec(object))
+        try:
+            arguments = str(inspect.signature(object))
+        except Exception:
+            arguments = "()"
 
         if len(name+arguments) > maxwidth:
             argstr = _split_line(name, arguments, maxwidth)
@@ -568,18 +657,10 @@ def info(object=None, maxwidth=76, output=sys.stdout, toplevel='numpy'):
 
     elif inspect.isclass(object):
         name = object.__name__
-        arguments = "()"
         try:
-            if hasattr(object, '__init__'):
-                arguments = formatargspec(
-                        *getargspec(object.__init__.__func__)
-                        )
-                arglist = arguments.split(', ')
-                if len(arglist) > 1:
-                    arglist[1] = "("+arglist[1]
-                    arguments = ", ".join(arglist[1:])
+            arguments = str(inspect.signature(object))
         except Exception:
-            pass
+            arguments = "()"
 
         if len(name+arguments) > maxwidth:
             argstr = _split_line(name, arguments, maxwidth)
@@ -595,37 +676,17 @@ def info(object=None, maxwidth=76, output=sys.stdout, toplevel='numpy'):
             print(inspect.getdoc(object), file=output)
 
         methods = pydoc.allmethods(object)
-        if methods != []:
+
+        public_methods = [meth for meth in methods if meth[0] != '_']
+        if public_methods:
             print("\n\nMethods:\n", file=output)
-            for meth in methods:
-                if meth[0] == '_':
-                    continue
+            for meth in public_methods:
                 thisobj = getattr(object, meth, None)
                 if thisobj is not None:
                     methstr, other = pydoc.splitdoc(
                             inspect.getdoc(thisobj) or "None"
                             )
                 print("  %s  --  %s" % (meth, methstr), file=output)
-
-    elif inspect.ismethod(object):
-        name = object.__name__
-        arguments = formatargspec(
-                *getargspec(object.__func__)
-                )
-        arglist = arguments.split(', ')
-        if len(arglist) > 1:
-            arglist[1] = "("+arglist[1]
-            arguments = ", ".join(arglist[1:])
-        else:
-            arguments = "()"
-
-        if len(name+arguments) > maxwidth:
-            argstr = _split_line(name, arguments, maxwidth)
-        else:
-            argstr = name + arguments
-
-        print(" " + argstr + "\n", file=output)
-        print(inspect.getdoc(object), file=output)
 
     elif hasattr(object, '__doc__'):
         print(inspect.getdoc(object), file=output)
@@ -906,8 +967,12 @@ def _lookfor_generate_cache(module, import_modules, regenerate):
                             finally:
                                 sys.stdout = old_stdout
                                 sys.stderr = old_stderr
-                        # Catch SystemExit, too
+                        except KeyboardInterrupt:
+                            # Assume keyboard interrupt came from a user
+                            raise
                         except BaseException:
+                            # Ignore also SystemExit and pytests.importorskip
+                            # `Skipped` (these are BaseExceptions; gh-22345)
                             continue
 
             for n, v in _getmembers(item):
@@ -966,6 +1031,12 @@ def safe_eval(source):
     Evaluate a string containing a Python literal expression without
     allowing the execution of arbitrary non-literal code.
 
+    .. warning::
+
+        This function is identical to :py:meth:`ast.literal_eval` and
+        has the same security implications.  It may not always be safe
+        to evaluate large input strings.
+
     Parameters
     ----------
     source : str
@@ -1007,7 +1078,7 @@ def safe_eval(source):
     return ast.literal_eval(source)
 
 
-def _median_nancheck(data, result, axis, out):
+def _median_nancheck(data, result, axis):
     """
     Utility function to check median result from data for NaN values at the end
     and return NaN in that case. Input result can also be a MaskedArray.
@@ -1015,34 +1086,126 @@ def _median_nancheck(data, result, axis, out):
     Parameters
     ----------
     data : array
-        Input data to median function
+        Sorted input data to median function
     result : Array or MaskedArray
-        Result of median function
-    axis : {int, sequence of int, None}, optional
-        Axis or axes along which the median was computed.
-    out : ndarray, optional
-        Output array in which to place the result.
+        Result of median function.
+    axis : int
+        Axis along which the median was computed.
+
     Returns
     -------
-    median : scalar or ndarray
-        Median or NaN in axes which contained NaN in the input.
+    result : scalar or ndarray
+        Median or NaN in axes which contained NaN in the input.  If the input
+        was an array, NaN will be inserted in-place.  If a scalar, either the
+        input itself or a scalar NaN.
     """
     if data.size == 0:
         return result
-    data = np.moveaxis(data, axis, -1)
-    n = np.isnan(data[..., -1])
-    # masked NaN values are ok
+    potential_nans = data.take(-1, axis=axis)
+    n = np.isnan(potential_nans)
+    # masked NaN values are ok, although for masked the copyto may fail for
+    # unmasked ones (this was always broken) when the result is a scalar.
     if np.ma.isMaskedArray(n):
         n = n.filled(False)
-    if result.ndim == 0:
-        if n == True:
-            if out is not None:
-                out[...] = data.dtype.type(np.nan)
-                result = out
-            else:
-                result = data.dtype.type(np.nan)
-    elif np.count_nonzero(n.ravel()) > 0:
-        result[n] = np.nan
+
+    if not n.any():
+        return result
+
+    # Without given output, it is possible that the current result is a
+    # numpy scalar, which is not writeable.  If so, just return nan.
+    if isinstance(result, np.generic):
+        return potential_nans
+
+    # Otherwise copy NaNs (if there are any)
+    np.copyto(result, potential_nans, where=n)
     return result
 
-#-----------------------------------------------------------------------------
+def _opt_info():
+    """
+    Returns a string contains the supported CPU features by the current build.
+
+    The string format can be explained as follows:
+        - dispatched features that are supported by the running machine
+          end with `*`.
+        - dispatched features that are "not" supported by the running machine
+          end with `?`.
+        - remained features are representing the baseline.
+    """
+    from numpy.core._multiarray_umath import (
+        __cpu_features__, __cpu_baseline__, __cpu_dispatch__
+    )
+
+    if len(__cpu_baseline__) == 0 and len(__cpu_dispatch__) == 0:
+        return ''
+
+    enabled_features = ' '.join(__cpu_baseline__)
+    for feature in __cpu_dispatch__:
+        if __cpu_features__[feature]:
+            enabled_features += f" {feature}*"
+        else:
+            enabled_features += f" {feature}?"
+
+    return enabled_features
+
+
+def drop_metadata(dtype, /):
+    """
+    Returns the dtype unchanged if it contained no metadata or a copy of the
+    dtype if it (or any of its structure dtypes) contained metadata.
+
+    This utility is used by `np.save` and `np.savez` to drop metadata before
+    saving.
+
+    .. note::
+
+        Due to its limitation this function may move to a more appropriate
+        home or change in the future and is considered semi-public API only.
+
+    .. warning::
+
+        This function does not preserve more strange things like record dtypes
+        and user dtypes may simply return the wrong thing.  If you need to be
+        sure about the latter, check the result with:
+        ``np.can_cast(new_dtype, dtype, casting="no")``.
+
+    """
+    if dtype.fields is not None:
+        found_metadata = dtype.metadata is not None
+
+        names = []
+        formats = []
+        offsets = []
+        titles = []
+        for name, field in dtype.fields.items():
+            field_dt = drop_metadata(field[0])
+            if field_dt is not field[0]:
+                found_metadata = True
+
+            names.append(name)
+            formats.append(field_dt)
+            offsets.append(field[1])
+            titles.append(None if len(field) < 3 else field[2])
+
+        if not found_metadata:
+            return dtype
+
+        structure = dict(
+            names=names, formats=formats, offsets=offsets, titles=titles,
+            itemsize=dtype.itemsize)
+
+        # NOTE: Could pass (dtype.type, structure) to preserve record dtypes...
+        return np.dtype(structure, align=dtype.isalignedstruct)
+    elif dtype.subdtype is not None:
+        # subarray dtype
+        subdtype, shape = dtype.subdtype
+        new_subdtype = drop_metadata(subdtype)
+        if dtype.metadata is None and new_subdtype is subdtype:
+            return dtype
+
+        return np.dtype((new_subdtype, shape))
+    else:
+        # Normal unstructured dtype
+        if dtype.metadata is None:
+            return dtype
+        # Note that `dt.str` doesn't round-trip e.g. for user-dtypes.
+        return np.dtype(dtype.str)
